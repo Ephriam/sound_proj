@@ -50,7 +50,7 @@
                                 <button class="btn btn-lg btn-default" v-on:click="hearNext()">Hear Next</button>
                             </div>
                             <div>
-
+                               <h1>{{title}}</h1>
                             </div>
                             <div class="col-md-3">
                                 <div class="row input-group mb-3">
@@ -68,11 +68,12 @@
                                 </select>
                                 </div>
                                 <div class="row input-group mb-3">
-                                    <button class="btn m-2" v-on:click="setIntervals(0)" v-bind:class="{'btn-primary': intervals[0].on}">minor 2nd</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(1)" v-bind:class="{'btn-primary': intervals[1].on}">major 2nd</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(2)" v-bind:class="{'btn-primary': intervals[2].on}">minor 3nd</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(3)" v-bind:class="{'btn-primary': intervals[3].on}">major 3nd</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(4)" v-bind:class="{'btn-primary': intervals[4].on}">perfect 4th</button>
+                                    <button class="btn m-2" v-on:click="setIntervals(0)" v-bind:class="{'btn-primary': intervals[0].on}">unison</button>
+                                    <button class="btn m-2" v-on:click="setIntervals(1)" v-bind:class="{'btn-primary': intervals[1].on}">minor 2nd</button>
+                                    <button class="btn m-2" v-on:click="setIntervals(2)" v-bind:class="{'btn-primary': intervals[2].on}">major 2nd</button>
+                                    <button class="btn m-2" v-on:click="setIntervals(3)" v-bind:class="{'btn-primary': intervals[3].on}">minor 3nd</button>
+                                    <button class="btn m-2" v-on:click="setIntervals(4)" v-bind:class="{'btn-primary': intervals[4].on}">major 3nd</button>
+                                    <button class="btn m-2" v-on:click="setIntervals(5)" v-bind:class="{'btn-primary': intervals[5].on}">perfect 4th</button>
                                 </div>
                             </div>
                         </div>
@@ -115,6 +116,13 @@
         playNote()
         app.playAgain = true
     }
+    let getInterval = () => {
+        let availableIntervals = app.intervals.filter(val => {return val.on})
+        let intervalIndex = Math.floor(Math.random()*availableIntervals.length)
+        console.log(availableIntervals)
+        console.log(intervalIndex)
+        return availableIntervals[intervalIndex].interval
+    }
     const app = new Vue({
         el: '#app',
         data: {
@@ -123,19 +131,21 @@
             speed: '2',
             playAgain: false,
             intervals: [
-                {val: 'm2', on: false},
-                {val: 'M2', on: false},
-                {val: 'm3', on: false},
-                {val: 'M3', on: false},
-                {val: 'P4', on: false},
-            ]
+                {val: 'un', on: false, interval: 0},
+                {val: 'm2', on: false, interval: 1},
+                {val: 'M2', on: false, interval: 2},
+                {val: 'm3', on: false, interval: 3},
+                {val: 'M3', on: false, interval: 4},
+                {val: 'P4', on: false, interval: 5},
+            ],
         },
         methods: {
             play() {
                 piano.play('C', 4, 4)
             },
             hearNext() {
-                intervalGenerator(2)
+                this.title = getInterval()
+                intervalGenerator(this.title)
             },
             hearAgain() {
                 playNote(2)
@@ -143,9 +153,13 @@
             setIntervals(index) {
                 this.intervals[index].on = !this.intervals[index].on
             }
+        },
+        computed: {
+            availableIntervals() {
+                
+            }
         }
-    })
-     
+    })     
     onkeydown = (e) => {
         var key = e.keyCode ? e.keyCode : e.which;
         if(key === 67){
