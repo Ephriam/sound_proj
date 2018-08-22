@@ -44,13 +44,21 @@
               
                   <main role="main" class="container mt-5 text-center">
                     <div id="app">
-                        <div class="row"> 
-                            <div class="col-md-9">
-                                <button class="btn btn-lg btn-primary" v-if="playAgain" v-on:click="hearAgain()">Hear Again</button>
-                                <button class="btn btn-lg btn-default" v-on:click="hearNext()">Hear Next</button>
-                            </div>
-                            <div>
-                               <h1>{{title}}</h1>
+                        <div class="row text-center"> 
+                            <div class="col-9 col-offset-2">
+                                <div class="row text-center">
+                                    <button class="btn m-2 btn-lg btn-primary" v-if="playAgain" v-on:click="hearAgain()">Hear Again</button>
+                                    <button class="btn m-2 btn-lg btn-default" v-if="canHearNext" v-on:click="hearNext()">Hear Next</button>
+                                </div>
+                                <div class="row mt-2">
+                                    <p v-if="messageStatus===''">Press hear next to begin </p>
+                                    <p v-if="messageStatus==='GUESS'">Guess this sound</p>
+                                    <p v-if="messageStatus==='CORRECT'">Yes you are correct</p>
+                                    <p v-if="messageStatus==='WRONG'">No that is wrong</p>
+                                </div>
+                                <div class="row mt-3">
+                                    <button class="btn m-2" v-bind:class="val.cl" v-for="(val, i) in availableIntervals" v-on:click="guessAnswer(val, i)">{{val.val}}</button>
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="row input-group mb-3">
@@ -68,12 +76,7 @@
                                 </select>
                                 </div>
                                 <div class="row input-group mb-3">
-                                    <button class="btn m-2" v-on:click="setIntervals(0)" v-bind:class="{'btn-primary': intervals[0].on}">unison</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(1)" v-bind:class="{'btn-primary': intervals[1].on}">minor 2nd</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(2)" v-bind:class="{'btn-primary': intervals[2].on}">major 2nd</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(3)" v-bind:class="{'btn-primary': intervals[3].on}">minor 3nd</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(4)" v-bind:class="{'btn-primary': intervals[4].on}">major 3nd</button>
-                                    <button class="btn m-2" v-on:click="setIntervals(5)" v-bind:class="{'btn-primary': intervals[5].on}">perfect 4th</button>
+                                    <button class="btn m-2" v-for="(interval, i) in intervals" v-on:click="setIntervals(i)" v-bind:class="{'btn-primary': intervals[i].on}">{{interval.val}}</button>
                                 </div>
                             </div>
                         </div>
@@ -108,6 +111,7 @@
         console.log(currentNote.secondNoteIndex)
     }
     let intervalGenerator = (interval) => {
+        currentNote.interval = interval
         currentNote.firstOctave = 4
         currentNote.secondOctave = 4
         currentNote.firstNoteIndex = Math.floor(Math.random()*12)
@@ -117,11 +121,15 @@
         app.playAgain = true
     }
     let getInterval = () => {
-        let availableIntervals = app.intervals.filter(val => {return val.on})
-        let intervalIndex = Math.floor(Math.random()*availableIntervals.length)
-        console.log(availableIntervals)
+        let intervalIndex = Math.floor(Math.random()*app.availableIntervals.length)
+        console.log(app.availableIntervals)
         console.log(intervalIndex)
-        return availableIntervals[intervalIndex].interval
+        return app.availableIntervals[intervalIndex].interval
+    }
+    let classes = {
+        correct: 'btn-success',
+        wrong: 'btn-danger',
+        notGuessed: 'btn-default'
     }
     const app = new Vue({
         el: '#app',
@@ -130,13 +138,16 @@
             assneding: '1',
             speed: '2',
             playAgain: false,
+            canTurnOffInterval: 0,
+            messageStatus: '',
+            canHearNext: true,
             intervals: [
-                {val: 'un', on: false, interval: 0},
-                {val: 'm2', on: false, interval: 1},
-                {val: 'M2', on: false, interval: 2},
-                {val: 'm3', on: false, interval: 3},
-                {val: 'M3', on: false, interval: 4},
-                {val: 'P4', on: false, interval: 5},
+                {val: 'unison', on: true, interval: 0, cl: classes.notGuessed },
+                {val: 'minor 2nd', on: false, interval: 1, cl: classes.notGuessed},
+                {val: 'Major 2nd', on: false, interval: 2, cl: classes.notGuessed},
+                {val: 'minor 3rd', on: false, interval: 3, cl: classes.notGuessed},
+                {val: 'Major 3rd', on: false, interval: 4, cl: classes.notGuessed},
+                {val: 'Perfect 4th', on: false, interval: 5, cl: classes.notGuessed},
             ],
         },
         methods: {
@@ -144,19 +155,36 @@
                 piano.play('C', 4, 4)
             },
             hearNext() {
-                this.title = getInterval()
-                intervalGenerator(this.title)
+                this.intervals = this.intervals.map(val =>{
+                    val.cl = classes.notGuessed
+                    return val
+                })
+                this.canHearNext = false
+                intervalGenerator(getInterval())
             },
             hearAgain() {
                 playNote(2)
             },
             setIntervals(index) {
+                if(this.intervals[index].on === false){this.canTurnOffInterval++}
+                if(!this.canTurnOffInterval){return}
+                if(this.intervals[index].on === true){this.canTurnOffInterval--}
                 this.intervals[index].on = !this.intervals[index].on
+            },
+            guessAnswer(intervalObj, i) {
+                if(intervalObj.val === this.intervals[currentNote.interval].val){
+                    this.messageStatus = 'CORRECT'
+                    this.availableIntervals[i].cl = classes.correct
+                    this.canHearNext = true
+                }else {
+                    this.messageStatus = 'WRONG'
+                    this.availableIntervals[i].cl = classes.wrong
+                }
             }
         },
         computed: {
             availableIntervals() {
-                
+                return this.intervals.filter(val => {return val.on})
             }
         }
     })     
