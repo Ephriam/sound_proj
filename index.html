@@ -47,6 +47,11 @@
                         <div class="row text-center"> 
                             <div class="col-9 col-offset-2">
                                 <div class="row text-center">
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                <div class="row text-center">
                                     <button class="btn m-2 btn-lg btn-primary" v-if="playAgain" v-on:click="hearAgain()">Hear Again</button>
                                     <button class="btn m-2 btn-lg btn-default" v-if="canHearNext" v-on:click="hearNext()">Hear Next</button>
                                 </div>
@@ -72,7 +77,14 @@
                                     <option value="1">Slow</option>
                                     <option selected value="2">Medium</option>
                                     <option value="3">Fast</option>
-                                    <option value="3">Harmonized</option>
+                                    <option value="4">Harmonized</option>
+                                </select>
+                                </div>
+                                <div class="row input-group mb-3">
+                                <select class="custome-select" v-model="octaves">
+                                    <option value="1">3-7</option>
+                                    <option selected value="2">4-6</option>
+                                    <option value="3">4</option>
                                 </select>
                                 </div>
                                 <div class="row input-group mb-3">
@@ -81,9 +93,7 @@
                             </div>
                         </div>
                     </div> 
-                  </main><!-- /.container -->
-              
-        
+                  </main><!-- /.container -->       
     </div>
 <script src="./vue.js"></script>
 <script src="./audiosynth.js"></script>
@@ -98,25 +108,26 @@
             piano.play(numbersToLetters[currentNote.firstNoteIndex], currentNote.firstOctave, 4)
             setTimeout(()=>{
                piano.play(numbersToLetters[currentNote.secondNoteIndex], currentNote.secondOctave, 4) 
-            }, 1000)    
+            }, getSpeed())    
                 
         }
         else{
             piano.play(numbersToLetters[currentNote.secondNoteIndex], currentNote.firstOctave, 4)
             setTimeout(()=>{
                piano.play(numbersToLetters[currentNote.firstNoteIndex], currentNote.secondOctave, 4) 
-            }, 1000)
+            }, getSpeed())
         }
-        console.log(currentNote.firstNoteIndex)
-        console.log(currentNote.secondNoteIndex)
+        console.log(getSpeed())
+        console.log(currentNote.firstOctave)
+        console.log(currentNote.secondOctave)
     }
     let intervalGenerator = (interval) => {
         currentNote.interval = interval
-        currentNote.firstOctave = 4
-        currentNote.secondOctave = 4
+        currentNote.firstOctave = getOctave()
+        currentNote.secondOctave = getOctave()
         currentNote.firstNoteIndex = Math.floor(Math.random()*12)
         currentNote.secondNoteIndex = currentNote.firstNoteIndex + interval >= 12 ? currentNote.firstNoteIndex - interval : currentNote.firstNoteIndex + interval
-        currentNote.order = Math.floor(Math.random()*2)
+        currentNote.order = getOrder()
         playNote()
         app.playAgain = true
     }
@@ -125,6 +136,21 @@
         console.log(app.availableIntervals)
         console.log(intervalIndex)
         return app.availableIntervals[intervalIndex].interval
+    }
+    let getOrder = () => {
+        if(app.assneding === '1'){return 0}
+        if(app.assneding === '2'){return Math.floor(Math.random()*2)}
+    }
+    let getOctave = () => {
+        if(app.octaves === '1'){return Math.floor(Math.random()*5)+3}
+        if(app.octaves === '2'){return Math.floor(Math.random()*3)+4}
+        if(app.octaves === '3'){return 4}
+    }
+    let getSpeed = () => {
+        if(app.speed === '1'){return 2000}
+        if(app.speed === '2'){return 1000}
+        if(app.speed === '3'){return 500}
+        if(app.speed === '4'){return 0}
     }
     let classes = {
         correct: 'btn-success',
@@ -149,6 +175,7 @@
                 {val: 'Major 3rd', on: false, interval: 4, cl: classes.notGuessed},
                 {val: 'Perfect 4th', on: false, interval: 5, cl: classes.notGuessed},
             ],
+            octaves: '2'
         },
         methods: {
             play() {
