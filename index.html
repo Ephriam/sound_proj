@@ -104,17 +104,19 @@
     var piano = Synth.createInstrument('piano')
     let currentNote = {} 
     let playNote = () => {
+        let gap = getGap()/1000
+        console.log(gap)
         if(currentNote.order === 0){
-            piano.play(numbersToLetters[currentNote.firstNoteIndex], currentNote.firstOctave, 4)
+            piano.play(numbersToLetters[currentNote.firstNoteIndex], currentNote.firstOctave, gap)
             setTimeout(()=>{
-               piano.play(numbersToLetters[currentNote.secondNoteIndex], currentNote.secondOctave, 4) 
+               piano.play(numbersToLetters[currentNote.secondNoteIndex], currentNote.secondOctave, gap) 
             }, getSpeed())    
                 
         }
         else{
-            piano.play(numbersToLetters[currentNote.secondNoteIndex], currentNote.firstOctave, 4)
+            piano.play(numbersToLetters[currentNote.secondNoteIndex], currentNote.firstOctave, gap)
             setTimeout(()=>{
-               piano.play(numbersToLetters[currentNote.firstNoteIndex], currentNote.secondOctave, 4) 
+               piano.play(numbersToLetters[currentNote.firstNoteIndex], currentNote.secondOctave, gap) 
             }, getSpeed())
         }
         console.log(getSpeed())
@@ -151,6 +153,10 @@
         if(app.speed === '2'){return 1000}
         if(app.speed === '3'){return 500}
         if(app.speed === '4'){return 0}
+    }
+    getGap = () => {
+        if(app.speed === '4'){return 1000}
+        else{return getSpeed()}
     }
     let classes = {
         correct: 'btn-success',
