@@ -70,10 +70,13 @@
                                     <p v-if="messageStatus===''">Press hear next to begin </p>
                                     <p v-if="messageStatus==='GUESS'">Guess this sound</p>
                                     <p v-if="messageStatus==='CORRECT'">Yes you are correct</p>
-                                    <p v-if="messageStatus==='WRONG'">No that is wrong </p>
+                                    <p v-if="messageStatus==='WRONG'">No that is wrong</p>
                                 </div>
                                 <div class="row mt-3">
                                     <button class="btn m-2" v-bind:class="val.cl" v-for="(val, i) in availableIntervals" v-on:click="guessAnswer(val, i)">{{val.val}}</button>
+                                </div>
+                                <div class="row">
+                                    <button class="btn btn-default m-2" v-for="val in numbersToLetters" v-on:click="play(val)">{{val}}</button>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -202,11 +205,12 @@
                 {val: 'Perfect 4th', on: false, interval: 5, cl: classes.notGuessed},
             ],
             octaves: '2',
-            notes: ''
+            notes: '',
+            numbersToLetters
         },
         methods: {
-            play() {
-                piano.play('C', 4, 4)
+            play(a) {
+                piano.play(a, 4, 2)
             },
             hearNext() {
                 this.intervals = this.intervals.map(val =>{
