@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="./node_modules\bootstrap\dist\css\bootstrap.min.css">
+    <style>
+        progress[value] {
+            width: 700px;
+            height: 20px;
+            appearance: none;
+            }
+    </style>
     <title>Document</title>
 </head>
 <body>
@@ -50,16 +57,20 @@
                                     <div class="progress">
                                         <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
+                                    <progress v-bind:max="maximum" v-bind:value="progress"></progress>                                    
                                 </div>
                                 <div class="row text-center">
                                     <button class="btn m-2 btn-lg btn-primary" v-if="playAgain" v-on:click="hearAgain()">Hear Again</button>
                                     <button class="btn m-2 btn-lg btn-default" v-if="canHearNext" v-on:click="hearNext()">Hear Next</button>
                                 </div>
+                                <div  class="row mt-2">
+                                    <p>Notes: {{notes}}</p>
+                                </div>
                                 <div class="row mt-2">
                                     <p v-if="messageStatus===''">Press hear next to begin </p>
                                     <p v-if="messageStatus==='GUESS'">Guess this sound</p>
                                     <p v-if="messageStatus==='CORRECT'">Yes you are correct</p>
-                                    <p v-if="messageStatus==='WRONG'">No that is wrong</p>
+                                    <p v-if="messageStatus==='WRONG'">No that is wrong </p>
                                 </div>
                                 <div class="row mt-3">
                                     <button class="btn m-2" v-bind:class="val.cl" v-for="(val, i) in availableIntervals" v-on:click="guessAnswer(val, i)">{{val.val}}</button>
@@ -95,6 +106,8 @@
                     </div> 
                   </main><!-- /.container -->       
     </div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="./node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
 <script src="./vue.js"></script>
 <script src="./audiosynth.js"></script>
 <script>
@@ -119,16 +132,13 @@
                piano.play(numbersToLetters[currentNote.firstNoteIndex], currentNote.secondOctave, gap) 
             }, getSpeed())
         }
-        console.log(getSpeed())
-        console.log(currentNote.firstOctave)
-        console.log(currentNote.secondOctave)
     }
     let intervalGenerator = (interval) => {
         currentNote.interval = interval
         currentNote.firstOctave = getOctave()
         currentNote.secondOctave = getOctave()
         currentNote.firstNoteIndex = Math.floor(Math.random()*12)
-        currentNote.secondNoteIndex = currentNote.firstNoteIndex + interval >= 12 ? currentNote.firstNoteIndex - interval : currentNote.firstNoteIndex + interval
+        currentNote.secondNoteIndex = currentNote.firstNoteIndex + interval >= 12 ? currentNote.firstNoteIndex + interval -12 : currentNote.firstNoteIndex + interval
         currentNote.order = getOrder()
         playNote()
         app.playAgain = true
@@ -163,6 +173,14 @@
         wrong: 'btn-danger',
         notGuessed: 'btn-default'
     }
+    let unlockNextLevel = () => {
+        if(app.progress >= app.maximum){
+            app.progress = 0
+            for(let i = 0; i<app.intervals.length; i++){
+                if(!app.intervals[i].on){app.intervals[i].on = true;return}
+            }
+        }
+    }
     const app = new Vue({
         el: '#app',
         data: {
@@ -173,6 +191,8 @@
             canTurnOffInterval: 0,
             messageStatus: '',
             canHearNext: true,
+            progress: 0,
+            maximum: 20,
             intervals: [
                 {val: 'unison', on: true, interval: 0, cl: classes.notGuessed },
                 {val: 'minor 2nd', on: false, interval: 1, cl: classes.notGuessed},
@@ -181,7 +201,8 @@
                 {val: 'Major 3rd', on: false, interval: 4, cl: classes.notGuessed},
                 {val: 'Perfect 4th', on: false, interval: 5, cl: classes.notGuessed},
             ],
-            octaves: '2'
+            octaves: '2',
+            notes: ''
         },
         methods: {
             play() {
@@ -193,6 +214,7 @@
                     return val
                 })
                 this.canHearNext = false
+                this.notes = 'To be revealed'
                 intervalGenerator(getInterval())
             },
             hearAgain() {
@@ -209,15 +231,21 @@
                     this.messageStatus = 'CORRECT'
                     this.availableIntervals[i].cl = classes.correct
                     this.canHearNext = true
+                    this.progress++
+                    this.notes = `${numbersToLetters[currentNote.firstNoteIndex]} and ${numbersToLetters[currentNote.secondNoteIndex]}`
+
                 }else {
                     this.messageStatus = 'WRONG'
                     this.availableIntervals[i].cl = classes.wrong
+                    this.progress -= this.maximum/4
+                    if(this.progress < 0){this.progress = 0}
                 }
+                unlockNextLevel()
             }
         },
         computed: {
             availableIntervals() {
-                return this.intervals.filter(val => {return val.on})
+                return this.intervals.filter(val => val.on)
             }
         }
     })     
