@@ -76,7 +76,7 @@
                                     <button class="btn m-2" v-bind:class="val.cl" v-for="(val, i) in availableIntervals" v-on:click="guessAnswer(val, i)">{{val.val}}</button>
                                 </div>
                                 <div class="row">
-                                    <button class="btn m-2" v-bind:class="pianoClasses1(i)" v-for="(val, i) in numbersToLetters" v-on:click="play(val, i)" >{{val}}</button>
+                                    <button class="btn m-2" v-bind:class="pianoClasses[i]" v-for="(val, i) in numbersToLetters" v-on:click="play(val, i)" >{{val}}</button>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -211,15 +211,16 @@
         },
         methods: {
             play(a, i) {
-                this.i = i
                 let time = 2
-                this.pianoClasses[i] = 'btn-primary'
-                console.log(this.pianoClasses[i])
+                let pianoClasses2 = [...this.pianoClasses]
+                pianoClasses2[i] = 'btn-primary'
+                this.pianoClasses = [...pianoClasses2]
                 piano.play(a, 4, time)
-                // setTimeout(()=>{
-                //     this.pianoClasses[i] = ''
-                // }, time)
-                console.log(this.pianoClasses[i])
+                setTimeout(()=>{
+                    pianoClasses2 = [...this.pianoClasses]
+                    pianoClasses2[i] = ''
+                    this.pianoClasses = [...pianoClasses2]
+                }, time*100)
             },
             hearNext() {
                 this.intervals = this.intervals.map(val =>{
@@ -254,9 +255,6 @@
                     if(this.progress < 0){this.progress = 0}
                 }
                 unlockNextLevel()
-            },
-            pianoClasses1(i) {
-                return this.pianoClasses[i]
             }
         },
         computed: {
